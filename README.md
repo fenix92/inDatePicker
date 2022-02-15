@@ -1,4 +1,4 @@
-# jQuery-clickClock
+# jQuery-datePicker
 
 **jQuery** plugin that convert an input (type text) to reicive a DATE value **DD/MM/YYYY** (day/month/year) by creating a calendar. It can have a single date, or a start -> end date.
 
