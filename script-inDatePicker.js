@@ -509,7 +509,7 @@
 		var DP_convertToReadingDate = function(timestamp){
 			var d = new Date(timestamp);
 			if(d instanceof Date){
-				return listDays[d.getDate()%7]+" "+d.getDate()+" "+listMonths[d.getMonth()]+" "+d.getFullYear();
+				return listDays[(d.getDay()+6)%7]+" "+d.getDate()+" "+listMonths[d.getMonth()]+" "+d.getFullYear();
 			}else{
 				return '';
 			}
