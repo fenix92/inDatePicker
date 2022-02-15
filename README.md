@@ -28,11 +28,11 @@ Note that the value is not used. To make the calendar working :
 for a quick explaination,
 
     multiDays             : allow the calendar to have 2 dates to choose (start + end)
-    dateCalendarFirst	    : define the first selectable date if any. has to be dd/mm/yyyy format, or 'today'
+    dateCalendarFirst     : define the first selectable date if any. has to be dd/mm/yyyy format, or 'today'
     dateCalendarLast      : define the last selectable date if any. has to be dd/mm/yyyy format, or 'today'
     date_start            : set a selected first date. has to be dd/mm/yyyy format, or 'today'
     date_end              : set a selected last date. has to be dd/mm/yyyy format, or 'today'
-    placeholderFirstDate	: placeholder of the first date
+    placeholderFirstDate  : placeholder of the first date
     placeholderEndDate    : placeholder of the last date
 
 once the plugin is launched, at any moment you can access to this methods :
