@@ -72,10 +72,10 @@
 			background-color:var(--color-background);
 		}
 		.calendarGlobalContainer .split .calendar{
-			width: -moz-calc(50% - var(--margin-calendar)/2);
-			width: -webkit-calc(50% - var(--margin-calendar)/2);
-			width: -o-calc(50% - var(--margin-calendar)/2);
-			width: calc(50% - var(--margin-calendar)/2);
+			width: -moz-calc(50% - var(--margin-calendar)*2);
+			width: -webkit-calc(50% - var(--margin-calendar)*2);
+			width: -o-calc(50% - var(--margin-calendar)*2);
+			width: calc(50% - var(--margin-calendar)*2);
 		}
 		.calendarGlobalContainer .calendarContainer:not(.split) .calendar{
 			width: -moz-calc(100% - var(--padding-calendar)*2);
@@ -201,9 +201,9 @@
 .calendarGlobalContainer .ns,
 .calendarGlobalContainer .day_ns{	/* no_select */
 	-webkit-touch-callout: none;
-	  -webkit-user-select: none;	/* Chrome, Safari, Opéra depuis la version 15 */
+	  -webkit-user-select: none;	/* Chrome, Safari, Op≈Ωra depuis la version 15 */
 	   -khtml-user-select: none;
 	     -moz-user-select: none;	/* Firefox */
 	      -ms-user-select: none;	/* Internet explorer depuis la version 10 et Edge */
-		  user-select: none;	/* Propriété standard */
+		  user-select: none;	/* Propri≈Ωt≈Ω standard */
 }
