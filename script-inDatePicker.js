@@ -327,6 +327,12 @@
 				"display" :	"none",
 				"visibility" :	"visible"
 			});
+			$(document).mouseup(function(e){
+				// if we click outside the calendar, we close it
+				if(!calendarGlobalContainer.is(e.target) && calendarGlobalContainer.has(e.target).length === 0){
+					DP_closeCalendar();
+				}
+			});
 		};
 		// function to display a calendar with a given month/year
 		var DP_getCalendarHTML = function(m,y) {
