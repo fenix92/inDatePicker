@@ -37,13 +37,18 @@ for a quick explaination,
 
 once the plugin is launched, at any moment you can access to this methods :
 
-    inputDatePicker.show();             : display the calendar
-    inputDatePicker.hide();             : slideUp the calendar
-    inputDatePicker.getFirstDay(true);  : return the selected first day "Jeudi 15 Fevrier 2022"
-    inputDatePicker.getFirstDay(false); : return the selected first day "15/2/2022"
-    inputDatePicker.getLastDay(true);   : return the selected last day "Jeudi 15 Fevrier 2022"
-    inputDatePicker.getLastDay(false);  : return the selected last day "15/2/2022"
-    inputDatePicker.getNumberDays();    : return the number of days in the selection
+    inputDatePicker.show();                     : display the calendar
+    inputDatePicker.hide();                     : slideUp the calendar
+    inputDatePicker.getFirstDay(true);          : return the selected first day "Jeudi 15 Fevrier 2022"
+    inputDatePicker.getFirstDay(false);         : return the selected first day "15/2/2022"
+    inputDatePicker.getLastDay(true);           : return the selected last day "Jeudi 15 Fevrier 2022"
+    inputDatePicker.getLastDay(false);          : return the selected last day "15/2/2022"
+    inputDatePicker.getNumberDays();            : return the number of days in the selection
+    inputDatePicker.setFirstDay("26/09/1985")	: set the fist day to a date. accept date "dd/mm/yyy", date object, timestamp, "today" or null (to reset). If you have multiDays activated, use the function twice to set the last day.
+    inputDatePicker.setDayFirst("26/09/1985")	: set the fist possible date to be choosen (= dateCalendarFirst). accept date "dd/mm/yyy", date object, timestamp, "today" or null (to reset).
+    inputDatePicker.setDayLast("26/09/1985")	: set the last possible date to be choosen (= dateCalendarLast). accept date "dd/mm/yyy", date object, timestamp, "today" or null (to reset).
+    inputDatePicker.setPlaceholder("foo","bar")	: Change the placeholder of the input. The function accept one or two arguments
+
 
 When you call the plugin on a input, you can personalise few values (above). The rest are considered as defaults values, that can be edited on the beginnig of the JS file (below):
 
