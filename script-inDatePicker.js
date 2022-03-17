@@ -9,29 +9,35 @@
 			<input id="foo" type="text">
 
 			var inputDatePicker = $("#foo").inDatePicker({
-				multiDays		: true,		// allow you to choose a start date + end date (true). Or a single one (false)
-				dateCalendarFirst	: 'today',	// define the first selectable date if any. has to be dd/mm/yyyy format, or 'today'
-				dateCalendarLast	: '',		// define the last selectable date if any. has to be dd/mm/yyyy format, or 'today'
-				date_start		: '26/09/1985',	// set a selected first date. has to be dd/mm/yyyy format, or 'today'
-				date_end		: '',		// set a selected last date. has to be dd/mm/yyyy format, or 'today'
-				placeholderFirstDate	: 'Start Date',	// placeholder of the first date
-				placeholderEndDate	: 'End Date',	// placeholder of the last date
+				multiDays		: true,			// allow you to choose a start date + end date (true). Or a single one (false)
+				dateCalendarFirst	: 'today',		// define the first selectable date if any. has to be dd/mm/yyyy format, or 'today'
+				dateCalendarLast	: '',			// define the last selectable date if any. has to be dd/mm/yyyy format, or 'today'
+				date_start		: '26/09/1985',		// set a selected first date. has to be dd/mm/yyyy format, or 'today'
+				date_end		: '',			// set a selected last date. has to be dd/mm/yyyy format, or 'today'
+				placeholderFirstDate	: 'Start Date',		// placeholder of the first date
+				placeholderEndDate	: 'End Date',		// placeholder of the last date
+				callback: function(data){			// do some action after the date is choosen
+					alert(data);
+				}
 			});
 			-or-
 			var inputDatePicker = $("#foo").inDatePicker();
 			list of available methods
-			inputDatePicker.show();			// display the calendar
-			inputDatePicker.hide();			// slideUp the calendar
-			inputDatePicker.getFirstDay(true);	// return the selected first day "Jeudi 15 Fevrier 2022"
-			inputDatePicker.getFirstDay(false);	// return the selected first day "15/2/2022"
-			inputDatePicker.getLastDay(true);	// return the selected last day "Jeudi 15 Fevrier 2022"
-			inputDatePicker.getLastDay(false);	// return the selected last day "15/2/2022"
-			inputDatePicker.getNumberDays();	// return the number of days in the selection
+			inputDatePicker.show();				// display the calendar
+			inputDatePicker.hide();				// slideUp the calendar
+			inputDatePicker.getFirstDay(true);		// return the selected first day "Jeudi 15 Fevrier 2022"
+			inputDatePicker.getFirstDay(false);		// return the selected first day "15/2/2022"
+			inputDatePicker.getLastDay(true);		// return the selected last day "Jeudi 15 Fevrier 2022"
+			inputDatePicker.getLastDay(false);		// return the selected last day "15/2/2022"
+			inputDatePicker.getNumberDays();		// return the number of days in the selection
+			inputDatePicker.setFirstDay("26/09/1985");	// generate a click on a date
+			inputDatePicker.setDayFirst("26/09/1985");	// reset the first clickable day
+			inputDatePicker.setDayLast("26/09/1985");	// reset the last clickable day
 
 		CREDIT -
 			Sebastien Pipet (https://www.facebook.com/sebastien.pipet)
 		VERSION -
-			0.1
+			0.2
 		DISCLAIMER -
 			All this code is free : you can use, redistribute and/or modify it without any consentement.
 			Please just leave my name on it ;-)
@@ -58,6 +64,7 @@
 	var	howManyDays			= 'nombre de jours sélectionnés :';		// text to intoduce the number of day
 	var	date_start_default		= null;		// first date selected, with format dd/mm/yyyy . If null, no date is pre-selected
 	var	date_end_default		= null;		// if multiDays_default is set to true ; last date selected, with format dd/mm/yyyy . If null, no date is pre-selected.
+	var	callback_default		= null;		// function called once the date(s) is(are) selected
 	var	speedAnimation			= 400;		// animation speed
 
 	/* =================================================================================================== */
@@ -98,7 +105,7 @@
 			animationInProgress	= false,		// prevent user to click while an animation is in progress
 			focusOnDateStart	= true,			// tells the pluggin that we are checking the first date
 			isCalendarHidden	= true,			// tells if the calendar is visible or hidden
-			calendarGlobalContainer,inputsContainer,calendarFooter,calendarContainer;	// var with global scope
+			iname,calendarGlobalContainer,inputsContainer,calendarFooter,calendarContainer;	// var with global scope
 
 		// customizable parameters available, with the default values
 		params = $.extend({
@@ -108,7 +115,8 @@
 			date_start		: date_start_default,
 			date_end		: date_end_default,
 			placeholderFirstDate	: placeholderFirstDate_default,
-			placeholderEndDate	: placeholderEndDate_default
+			placeholderEndDate	: placeholderEndDate_default,
+			callback		: callback_default
 		}, params);
 
 
@@ -199,11 +207,10 @@
 			if(params.date_start == null || params.date_start.length == 0){
 				// params.date_start = new Date();
 			}else{
-				var reg = (params.date_start).match(new RegExp('^([0-9]*)'+DP_arraySeparators()+'([0-9]*)'+DP_arraySeparators()+'([0-9]*)$'));
 				if(params.date_start.toLowerCase() == "today"){
 					params.date_start = new Date();
 					params.date_start.setHours(0, 0, 0, 0);
-				}else if(reg){
+				}else if(DP_regexDate().test(params.date_start)){
 					params.date_start = DP_convertToDate(params.date_start);
 				}else{
 					params.date_start = date_start_default
@@ -217,14 +224,14 @@
 					}
 				}
 			}
-			if(params.date_end == null || params.date_end.length == 0){
+			if(params.date_end == null || params.date_end.length == 0 || !params.multiDays){
 				// params.date_end = new Date();
+				params.date_end = null;
 			}else{
-				var reg = (params.date_end).match(new RegExp('^([0-9]*)'+DP_arraySeparators()+'([0-9]*)'+DP_arraySeparators()+'([0-9]*)$'));
 				if(params.date_end.toLowerCase() == "today"){
 					params.date_end = new Date();
 					params.date_end.setHours(0, 0, 0, 0);
-				}else if(reg){
+				}else if(DP_regexDate().test(params.date_end)){
 					params.date_end = DP_convertToDate(params.date_end);
 				}else{
 					params.date_end = date_end_default
@@ -247,14 +254,13 @@
 					if(params.multiDays){
 						DP_overrideInput();
 					}
-
 				}
 			}
-			if(params.dateCalendarFirst.toLowerCase() == "today"){
+			if(params.dateCalendarFirst != null && params.dateCalendarFirst.toLowerCase() == "today"){
 				var d = new Date();
 				params.dateCalendarFirst = DP_convertToFormatedDate(d);
 			}
-			if(params.dateCalendarLast.toLowerCase() == "today"){
+			if(params.dateCalendarLast != null && params.dateCalendarLast.toLowerCase() == "today"){
 				var d = new Date();
 				params.dateCalendarLast = DP_convertToFormatedDate(d);
 			}
@@ -288,8 +294,8 @@
 					date_calendar = params.date_start;
 				}
 				calendarContainer.append('<div class="calendar" data-month="'+date_calendar.getMonth()+'" data-year="'+date_calendar.getFullYear()+'"></div>');
-				var calendar = $('.calendar[data-month="'+date_calendar.getMonth()+'"][data-year="'+date_calendar.getFullYear()+'"]');
-				calendarContainer.find('.calendar[data-month="'+date_calendar.getMonth()+'"][data-year="'+date_calendar.getFullYear()+'"]').append(DP_getCalendarHTML(date_calendar.getMonth(),date_calendar.getFullYear()));
+				var calendar = calendarContainer.find('.calendar[data-month="'+date_calendar.getMonth()+'"][data-year="'+date_calendar.getFullYear()+'"]');
+				calendar.append(DP_getCalendarHTML(date_calendar.getMonth(),date_calendar.getFullYear()));
 				calendarContainer.height(calendar.height()+calendarFooter.height());
 			}
 			// check if some cells must be selected
@@ -328,7 +334,7 @@
 				"visibility" :	"visible"
 			});
 			$(document).mouseup(function(e){
-				// if we click outside the calendar, we close it
+				// if we click outside the calendar ...
 				if(!calendarGlobalContainer.is(e.target) && calendarGlobalContainer.has(e.target).length === 0){
 					DP_closeCalendar();
 				}
@@ -422,7 +428,7 @@
 				}else{
 					calendarContainer.append('<div class="calendar" data-month="'+m+'" data-year="'+y+'"></div>');
 				}
-				var newCalendar = $('.calendar[data-month="'+m+'"][data-year="'+y+'"]');
+				var newCalendar = calendarGlobalContainer.find('.calendar[data-month="'+m+'"][data-year="'+y+'"]');
 				newCalendar.css({
 					"left" : newPosition+'px'
 				}).append(DP_getCalendarHTML(m,y));
@@ -435,7 +441,7 @@
 					finalHeight = newCalendar.height();
 				}
 				// animations
-				$(".calendar").each(function(index){
+				calendarGlobalContainer.find(".calendar").each(function(index){
 					if(who=="prev"){
 						$(this).animate({
 							left:($(this).position().left - newPosition)+"px"
@@ -453,7 +459,7 @@
 							left:($(this).position().left - calendarGlobalContainer.find('.calendar').eq(1).position().left)+"px"
 						},speedAnimation, function() {
 							// responsive compatible
-							if(index === ($(".calendar").length - 1)) {	// on last element = right calendar
+							if(index === (calendarGlobalContainer.find(".calendar").length - 1)) {	// on last element = right calendar
 								$(this).css({
 									"left":'',
 									"right":0
@@ -482,7 +488,7 @@
 		var DP_checkArrows = function(){
 			// left = prev arrow
 			var dateCalendarFirst = DP_convertToDate(params.dateCalendarFirst);
-			if(dateCalendarFirst!=null){
+			if(dateCalendarFirst!==null){
 				// we check the first date of the left calendar
 				var c = calendarGlobalContainer.find('.calendar').first();
 				// we extract the current month-year
@@ -494,10 +500,12 @@
 				}else{
 					calendarGlobalContainer.find(".calendarHeaderPrev").hide();
 				}
+			}else{
+				calendarGlobalContainer.find(".calendarHeaderPrev").show();
 			}
 			// right = next arrow
 			var dateCalendarLast = DP_convertToDate(params.dateCalendarLast);
-			if(dateCalendarLast!=null){
+			if(dateCalendarLast!==null){
 				// we check the last date of the right calendar
 				var c = calendarGlobalContainer.find('.calendar').last();
 				// we extract the current month-year
@@ -509,11 +517,13 @@
 				}else{
 					calendarGlobalContainer.find(".calendarHeaderNext").hide();
 				}
+			}else{
+				calendarGlobalContainer.find(".calendarHeaderNext").show();
 			}
 		};
 		// function that returns a timestamp to a human-readable date
 		var DP_convertToReadingDate = function(timestamp){
-			var d = new Date(timestamp);
+			var d = new Date(Number(timestamp));
 			if(d instanceof Date){
 				return listDays[(d.getDay()+6)%7]+" "+d.getDate()+" "+listMonths[d.getMonth()]+" "+d.getFullYear();
 			}else{
@@ -539,8 +549,7 @@
 			}else{
 				var d,m,y;
 				// while reading the regex, different separators types can be applied.
-				var separatoRegex = DP_arraySeparators();
-				var reg = string.match(new RegExp('^([0-9]*)'+separatoRegex+'([0-9]*)'+separatoRegex+'([0-9]*)$'));
+				var reg = string.match(DP_regexDate());
 				if(reg){
 					// clean return of values
 					d = reg[1];
@@ -583,67 +592,88 @@
 			}
 			return howMany;
 		};
-		// fonction qui retourne un array des separateurs possibles, pour etre utilise dans les regex
-		var DP_arraySeparators = function(){
+		// function that generates the regex to match a dd/mm/yyyy date
+		var DP_regexDate = function(){
+			var reg = '';
+			// we calcul the regex for the separators
 			var separatoRegex = '[';
 			if(typeof separatoRegex != "undefined" && separatoRegex != null && separatoRegex.length != null && separatoRegex.length > 0){
 				RegExp.escape = function(string) {
-					return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+					return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 				};
 				$.each(listeSeparatorsID, function( index, value ) {
 					separatoRegex = separatoRegex + RegExp.escape(value[0]);
 				});
-				
 			}else{
 				separator[0][0] = "/";
 				separatoRegex += '\\'+separator[0][0];	// si pas de separateur, on force celui la.
 			}
 			separatoRegex+="]";
-			return separatoRegex;
+			// then we generate the full regex
+			reg += '^';				// meta escape
+			reg += '(0?[1-9]|[12][0-9]|3[01])';	// days
+			reg += separatoRegex;			// splitter
+			reg += '(0?[1-9]|1[0-2])';		// months
+			reg += separatoRegex;			// splitter
+			reg += '(\\\d{2,4})';			// year
+			reg += '$';				// meta escape
+			return new RegExp(reg);
 		};
 		// function that handle the click on a date
 		var DP_selectDay = function(timestamp){
-			var dateClicked = new Date(parseInt(timestamp,10));
-			if(dateClicked instanceof Date){
-				// we need to know which date is concerned : first / last ?
-				if(focusOnDateStart){
-					// when we click on a FirstDate, the End Date (if existing) is deleted
-					calendarGlobalContainer.find(".inputDateStart").val(DP_convertToReadingDate(dateClicked)).attr('data-value', DP_convertToFormatedDate(dateClicked));
-					calendarGlobalContainer.find(".inputDateEnd").val("").focus().select().attr('data-value', "");
-					params.date_start = dateClicked;
-					params.date_end = null;
-					calendarGlobalContainer.find(".day_selection_hover").removeClass("day_selection_hover");
-					if(params.multiDays){
-						calendarGlobalContainer.find(".calendarFooterText").html("");
-					}else{
-						// DP_closeCalendar();
-					}
-				}else{
-					// if there are a second date - 
-					if(params.date_start==null || params.date_start.length==0 || params.date_start.getTime() > timestamp){
-						// if we click before (or params.date_start wrong), we reset the first day, else we have our last day
-						calendarGlobalContainer.find(".inputDateStart").focus().select();
-						DP_selectDay(timestamp);
-					}else{
+			if(timestamp==0){
+				// reset
+				calendarGlobalContainer.find(".inputDateStart").val("").attr('data-value', "");
+				calendarGlobalContainer.find(".inputDateEnd").val("").attr('data-value', "");
+				params.date_start = null;
+				params.date_end = null;
+				calendarGlobalContainer.find(".day_selection_hover").removeClass("day_selection_hover");
+				calendarGlobalContainer.find(".calendarFooterText").html("");
+			}else{
+				var dateClicked = new Date(parseInt(timestamp,10));
+				if(dateClicked instanceof Date){
+					// we need to know which date is concerned : first / last ?
+					if(focusOnDateStart){
+						// when we click on a FirstDate, the End Date (if existing) is deleted
+						calendarGlobalContainer.find(".inputDateStart").val(DP_convertToReadingDate(dateClicked)).attr('data-value', DP_convertToFormatedDate(dateClicked));
+						calendarGlobalContainer.find(".inputDateEnd").val("").focus().select().attr('data-value', "");
+						params.date_start = dateClicked;
+						params.date_end = null;
+						calendarGlobalContainer.find(".day_selection_hover").removeClass("day_selection_hover");
 						if(params.multiDays){
-							if(params.date_end==null || params.date_end.length==0){
-								// we rightly set the second date. If the END date is before the START sate, we switch 'em
-								calendarGlobalContainer.find(".inputDateEnd").val(DP_convertToReadingDate(dateClicked)).attr('data-value', DP_convertToFormatedDate(dateClicked));
-								params.date_end = dateClicked;
-								calendarGlobalContainer.find(".calendarFooterText").html(howManyDays+' '+DP_howManyDays());
-								// DP_closeCalendar();
-							}else{
-								// if we already have a End Date, we reset all the process
-								calendarGlobalContainer.find(".inputDateStart").focus().select();
-								DP_selectDay(timestamp);
+							calendarGlobalContainer.find(".calendarFooterText").html("");
+						}else{
+							calendarGlobalContainer.find(".calendarFooterText").html(howManyDays+' '+DP_howManyDays());
+							DP_callback();
+						}
+					}else{
+						// if there are a second date - 
+						if(params.date_start==null || params.date_start.length==0 || params.date_start.getTime() > timestamp){
+							// if we click before (or params.date_start wrong), we reset the first day, else we have our last day
+							calendarGlobalContainer.find(".inputDateStart").focus().select();
+							DP_selectDay(timestamp);
+						}else{
+							if(params.multiDays){
+								if(params.date_end==null || params.date_end.length==0){
+									// we rightly set the second date. If the END date is before the START sate, we switch 'em
+									calendarGlobalContainer.find(".inputDateEnd").val(DP_convertToReadingDate(dateClicked)).attr('data-value', DP_convertToFormatedDate(dateClicked));
+									params.date_end = dateClicked;
+									calendarGlobalContainer.find(".calendarFooterText").html(howManyDays+' '+DP_howManyDays());
+									DP_callback();
+									// DP_closeCalendar();
+								}else{
+									// if we already have a End Date, we reset all the process
+									calendarGlobalContainer.find(".inputDateStart").focus().select();
+									DP_selectDay(timestamp);
+								}
 							}
 						}
 					}
+				}else{
 				}
-				// check if some cells must be selected
-				DP_checkDaysSelected();
-			}else{
 			}
+			// check if some cells must be selected
+			DP_checkDaysSelected();
 			DP_overrideInput();
 		};
 		// function that override the original input (in case of webmaster needs)
@@ -686,6 +716,7 @@
 						// do we have a BETWEEN ?
 						$("#"+iname+"_globalContainer .day").each(function(i,d){
 							if($(d).attr("data-id") > date_startTimestamp && $(d).attr("data-id") < date_endTimestamp){
+								//calendarContainer.find('.day[data-id="'+$(d).attr("data-id")+'"]').addClass("day_between");
 								$(d).addClass("day_between");
 							}
 						});
@@ -720,7 +751,118 @@
 				calendarGlobalContainer.find('.inputDateEnd').val("");
 			}
 		};
-
+		// function that call the callback function, and passes the dates selected
+		var DP_callback = function(){
+			var callback = params.callback;
+			if(callback != null && callback.length != 0 && $.isFunction(callback)){
+				var ret = [];
+				ret.push(calendarGlobalContainer.find(".inputDateStart").attr('data-value'));
+				if(params.multiDays){
+					ret.push(calendarGlobalContainer.find(".inputDateEnd").attr('data-value'));
+				}
+				callback.call(this, ret);
+			}
+		};
+		// function that set (or unset) a starting/ending possible date = dateCalendarFirst / dateCalendarLast
+		var DP_setDateCalendarFirstOrLast = function(isFirst,d){
+			var new_timestamp = null;
+			if(typeof d == "undefined" || d == null || d.length == 0){
+				// we reset the starting date
+				new_timestamp = "";
+			}else{
+				switch(true) {
+					case((d+"").toLowerCase() == "today"):{
+						var today = new Date();
+						today.setHours(0, 0, 0, 0);
+						new_timestamp = today.getTime();
+					}break;
+					case(!isNaN(d) && parseInt(Number(d))==d && !isNaN(parseInt(d, 10))):{
+						// we check if the value is a correct timestamp
+						if((new Date(parseInt(d, 10))).getTime() > 0){
+							new_timestamp = d;
+						}else{
+							// fail, we do nothing
+							if(isFirst)
+								console.log("inDatePicker plugin : function setDayFirst() fail with the given parameters : "+d);
+							else
+								console.log("inDatePicker plugin : function setDayLast() fail with the given parameters : "+d);
+						}
+					}break;
+					case (d instanceof Date):{
+						// we have a date
+						d.setHours(0, 0, 0, 0);
+						new_timestamp = d.getTime();
+					}break;
+					case (DP_regexDate().test(d+"")):{
+						d = DP_convertToDate(d);
+						new_timestamp = d.getTime();
+					}break;
+					default:{
+						// fail, we do nothing
+						if(isFirst)
+							console.log("inDatePicker plugin : function setDayFirst() fail with the given parameters : "+d);
+						else
+							console.log("inDatePicker plugin : function setDayLast() fail with the given parameters : "+d);
+					}
+				}
+			}
+			if(new_timestamp!==null){
+				if(isFirst){
+					if(new_timestamp==""){
+						params.dateCalendarFirst = null;
+					}else{
+						var nd = new Date(new_timestamp);
+						params.dateCalendarFirst = DP_convertToFormatedDate(nd);
+					}
+				}else{
+					if(new_timestamp==""){
+						params.dateCalendarLast = null;
+					}else{
+						var nd = new Date(new_timestamp);
+						params.dateCalendarLast = DP_convertToFormatedDate(nd);
+					}
+				}
+				// we need to figure if the current displayed calendar has to be changed
+				var dateCalendarFirst = DP_convertToDate(params.dateCalendarFirst);
+				var dateCalendarLast = DP_convertToDate(params.dateCalendarLast);
+				$("#"+iname+"_globalContainer .day").each(function(i,d){
+					if(	(	dateCalendarFirst!=null &&	dateCalendarFirst.getTime() > $(d).attr("data-id")	)||
+						(	dateCalendarLast!=null &&	dateCalendarLast.getTime() < $(d).attr("data-id")	)){
+						$(d).addClass("day_ns");
+					}else{
+						$(d).removeClass("day_ns");
+					}
+				});
+				if(dateCalendarFirst != null && dateCalendarLast != null && dateCalendarFirst.getTime()>dateCalendarLast.getTime()){
+					// nothing can be accessed - all days are out.
+					DP_selectDay(0);
+				}else{
+					var date_start = params.date_start;
+					var date_end = params.date_end;
+					if(date_start instanceof Date){
+						if(dateCalendarFirst != null && date_start.getTime() < dateCalendarFirst.getTime()){
+							date_start = dateCalendarFirst;
+						}
+						if(dateCalendarLast != null && date_start.getTime() > dateCalendarLast.getTime()){
+							date_start = dateCalendarLast;
+						}
+					}
+					if(date_end instanceof Date){
+						if(dateCalendarFirst != null && date_end.getTime() < dateCalendarFirst.getTime()){
+							date_end = dateCalendarFirst;
+						}
+						if(dateCalendarLast != null && date_end.getTime() > dateCalendarLast.getTime()){
+							date_end = dateCalendarLast;
+						}
+					}
+					if(date_start!=null)
+						DP_selectDay(date_start.getTime());
+					if(date_end!=null)
+						DP_selectDay(date_end.getTime());
+				}
+				DP_checkArrows();
+			}
+		};
 
 
 		// ================= PUBLIC FUNCTIONS =================
@@ -775,6 +917,60 @@
 		inDatePicker.getNumberDays = function() {
 			return DP_howManyDays();
 		};
+		// function called from the dom to set a start date. the date has to be timestamp or dd/mm/yyyy or null or 'today', or a date object
+		inDatePicker.setFirstDay = function(d) {
+			if(typeof d == "undefined" || d == null || d.length == 0){
+				// we reset the date
+				DP_selectDay(0);
+			}else{
+				switch(true) {
+					case((d+"").toLowerCase() == "today"):{
+						var today = new Date();
+						today.setHours(0, 0, 0, 0);
+						DP_selectDay(today.getTime());
+					}break;
+					case(!isNaN(d) && parseInt(Number(d))==d && !isNaN(parseInt(d, 10))):{
+						// we check if the value is a correct timestamp
+						if((new Date(parseInt(d, 10))).getTime() > 0){
+							DP_selectDay(d);
+						}else{
+							// fail, we do nothing
+							console.log("inDatePicker plugin : function setFirstDay() fail with the given parameters : "+d);
+						}
+					}break;
+					case (d instanceof Date):{
+						// we have a date
+						d.setHours(0, 0, 0, 0);
+						DP_selectDay(d.getTime());
+					}break;
+					case (DP_regexDate().test(d+"")):{
+						d = DP_convertToDate(d);
+						DP_selectDay(d.getTime());
+					}break;
+					default:{
+						// fail, we do nothing
+						console.log("inDatePicker plugin : function setFirstDay() fail with the given parameters : "+d);
+					}
+				}
+			}
+		};
+		// function called from the dom to define a new starting date. Anything before can't be choosen. the date has to be timestamp or dd/mm/yyyy or null or 'today', or a date object
+		inDatePicker.setDayFirst = function(d) {
+			DP_setDateCalendarFirstOrLast(true,d);
+		};
+		// function called from the dom to define a new ending date. Anything before can't be choosen. the date has to be timestamp or dd/mm/yyyy or null or 'today', or a date object
+		inDatePicker.setDayLast = function(d) {
+			DP_setDateCalendarFirstOrLast(false,d);
+		};
+		// function that changes the input's placeholder
+		inDatePicker.setPlaceholder = function(placeholders){
+			calendarGlobalContainer.find('.inputDateStart').attr("placeholder",arguments[0]);
+			if(arguments[1]!==undefined && params.multiDays){
+				calendarGlobalContainer.find(".inputDateEnd").attr("placeholder",arguments[1]);
+			}
+		}
+		
+		
 
 		return DP_intialize();
 	}
